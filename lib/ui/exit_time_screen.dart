@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 
 import '../domain/cartellino.dart';
 import '../domain/clock.dart';
@@ -85,6 +86,21 @@ class _ExitTimeScreenState extends State<ExitTimeScreen> {
     await _setPunches([..._punches, minutes]..sort());
   }
 
+  void _moveSlider(int raw, List<AdjustStop> stops) {
+    final minutes = [for (final s in stops) s.minutes];
+    final next = valueWithStops(current: _adjustMinutes, raw: raw, stops: minutes);
+    if (next == _adjustMinutes) return;
+    if (minutes.contains(next)) HapticFeedback.selectionClick();
+    setState(() => _adjustMinutes = next);
+  }
+
+  String _stopLabel(AdjustStop s) => switch (s.kind) {
+        AdjustStopKind.balance => 'Saldo ${s.minutes}\'',
+        AdjustStopKind.tolerance => '${s.minutes}\'',
+        AdjustStopKind.latestCountedExit =>
+          '${s.minutes}\' (${formatHm(WorkRules.unisa.latestCountedExit)})',
+      };
+
   Future<void> _pickPunch() async {
     final picked = await showTimePicker(context: context, initialTime: TimeOfDay.now());
     if (picked != null && mounted) await _addPunch(hm(picked.hour, picked.minute));
@@ -108,6 +124,13 @@ class _ExitTimeScreenState extends State<ExitTimeScreen> {
         error = e.message;
       }
     }
+
+    final recovering = _mode == _AdjustMode.recoverDebt;
+    final stops = recovering
+        ? debtStops(
+            balance: _balance, baseExit: result == null ? null : result.exitAt - _adjustMinutes)
+        : creditStops(balance: _balance);
+    final maxAdjust = recovering ? WorkRules.unisa.maxDebtRecovered : WorkRules.unisa.maxCreditUsed;
 
     return Scaffold(
       appBar: AppBar(
@@ -164,16 +187,30 @@ class _ExitTimeScreenState extends State<ExitTimeScreen> {
               ButtonSegment(value: _AdjustMode.recoverDebt, label: Text('Recupero debito')),
             ],
             selected: {_mode},
-            onSelectionChanged: (s) => setState(() => _mode = s.first),
+            onSelectionChanged: (s) => setState(() {
+              _mode = s.first;
+              _adjustMinutes = 0; // credit and debt have different ranges and stops
+            }),
           ),
           if (_mode != _AdjustMode.none) ...[
             Slider(
               value: _adjustMinutes.toDouble(),
-              max: 120,
-              divisions: 120,
+              max: maxAdjust.toDouble(),
+              divisions: maxAdjust,
               label: '$_adjustMinutes\'',
-              onChanged: (v) => setState(() => _adjustMinutes = v.round()),
+              onChanged: (v) => _moveSlider(v.round(), stops),
             ),
+            if (stops.isNotEmpty)
+              Wrap(
+                spacing: 8,
+                children: [
+                  for (final s in stops)
+                    ActionChip(
+                      label: Text(_stopLabel(s)),
+                      onPressed: () => setState(() => _adjustMinutes = s.minutes),
+                    ),
+                ],
+              ),
             Text(_mode == _AdjustMode.useCredit
                 ? 'Esci $_adjustMinutes\' prima usando il credito'
                 : 'Esci $_adjustMinutes\' dopo per recuperare il debito'),
@@ -196,6 +233,9 @@ class _ResultCard extends StatelessWidget {
         ExitTimeWarning.debtOverTolerance => 'Oltre 29\' di recupero serve un permesso',
         ExitTimeWarning.creditExceedsBalance =>
           'Credito usato superiore al saldo del mese (${formatSignedHm(balance ?? 0)})',
+        ExitTimeWarning.exitAfterLatestCounted =>
+          'Dopo le ${formatHm(WorkRules.unisa.latestCountedExit)} i minuti in eccedenza '
+              'non sono calcolati',
       };
 
   @override

@@ -54,7 +54,7 @@ From the desktop feature list, only:
 | # | Feature | Where |
 |---|---------|-------|
 | 1 | Download cartellino (SPID/CIE login in WebView) | `lib/ui/update_screen.dart`, `assets/js/extract_cartellino.js` |
-| 2 | Onboarding (year, min date for used riposi) | `lib/ui/settings_screen.dart` (first run opens it) |
+| 2 | Onboarding (min date for used riposi; the year is always the current one) | `lib/ui/settings_screen.dart` (first run opens it) |
 | 3 | Eccezioni del mese (codes, default ERIT, SCN) | `lib/domain/dashboard.dart` |
 | 4 | Saldo ore del mese (CRE, OE-DIU, SCN; SCN subtracted) | `lib/domain/ore.dart` |
 | 5 | Riposi compensativi summary | `lib/domain/riposi.dart` |
@@ -133,7 +133,9 @@ Design choices:
    `page.len(-1)` instead of paging. The portal's `/rpc/` endpoints weren't investigated.
 5. Android: never launched; the whole flow is still to be checked there.
 6. **Partly done:** `PresenzePortal.cartellinoUrl` passes no `iddip` (desktop `get.py` hard-codes
-   one) and the author's cartellino still loads. Still to check with another employee's login.
+   one) and the author's cartellino still loads. Colleagues reportedly used the desktop app with its
+   hard-coded id without problems, which suggests the session decides whose data is shown.
+   Low risk, but to be confirmed with another employee's login on mobile (TestFlight).
 
 ## Exit time rules ("Uscita prevista") — agreed with the product owner
 
@@ -147,6 +149,11 @@ Design choices:
 - Optional, always explicit: **use credit** (leave earlier) or **recover debt** (leave
   later). Over **29'/day** a permit is needed → **warning, never a block**. Also warn
   when credit used exceeds the current month balance.
+- Credit slider: maximum **60'** (beyond that a permit is needed, so it's out of scope).
+  Stops at the month's positive balance and at 29'.
+- Debt slider: stops at the month's negative balance, at 29' and at the recovery that reaches
+  19:50. A slider stop holds until forced 4' past it.
+- Excess minutes after **19:50** are not counted → warning.
 - If the last punch is an exit, result is provisional: re-entry assumed "now",
   refreshed every 30 s.
 

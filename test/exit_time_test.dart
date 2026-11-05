@@ -62,6 +62,67 @@ void main() {
     });
   });
 
+  group('latest counted exit', () {
+    test('exit at 19:50 is fine', () {
+      expect(computeExitTime(punches: [hm(12, 28)]).warnings, isEmpty);
+    });
+    test('exit after 19:50 warns, also because of debt recovery', () {
+      expect(computeExitTime(punches: [hm(12, 29)]).warnings,
+          [ExitTimeWarning.exitAfterLatestCounted]);
+      expect(computeExitTime(punches: [hm(12, 28)], debtRecovered: 1).warnings,
+          [ExitTimeWarning.exitAfterLatestCounted]);
+    });
+  });
+
+  group('slider stops', () {
+    List<int> minutes(List<AdjustStop> stops) => [for (final s in stops) s.minutes];
+
+    test('credit: monthly excess and tolerance, sorted', () {
+      expect(minutes(creditStops(balance: 12)), [12, 29]);
+      expect(minutes(creditStops(balance: 45)), [29, 45]);
+    });
+    test('credit: no balance stop when negative, missing or over 60\'', () {
+      expect(minutes(creditStops(balance: -12)), [29]);
+      expect(minutes(creditStops()), [29]);
+      expect(minutes(creditStops(balance: 61)), [29]);
+    });
+    test('credit: equal stops are merged', () {
+      expect(minutes(creditStops(balance: 29)), [29]);
+    });
+    test('debt: shortfall, tolerance and recovery reaching 19:50', () {
+      // Entry 12:00 -> exit 19:22 -> 28' to 19:50.
+      final stops = debtStops(balance: -15, baseExit: hm(19, 22));
+      expect(minutes(stops), [15, 28, 29]);
+      expect(stops[1].kind, AdjustStopKind.latestCountedExit);
+    });
+    test('debt: no stops for a positive balance or an exit already past 19:50', () {
+      expect(minutes(debtStops(balance: 15, baseExit: hm(20, 0))), [29]);
+    });
+    test('debt: a far 19:50 is outside the slider', () {
+      expect(minutes(debtStops(baseExit: hm(15, 12))), [29]);
+    });
+
+    int move(int current, int raw) =>
+        valueWithStops(current: current, raw: raw, stops: const [12, 29]);
+
+    test('free movement between stops', () => expect(move(5, 8), 8));
+    test('stops on reaching or crossing a stop', () {
+      expect(move(10, 12), 12);
+      expect(move(27, 31), 29);
+    });
+    test('stays on the stop until forced 4\' away', () {
+      expect(move(29, 32), 29);
+      expect(move(29, 33), 33);
+      expect(move(29, 26), 29);
+      expect(move(29, 25), 25);
+    });
+    test('forcing past a stop can land on the next one', () => expect(move(12, 30), 29));
+    test('values just past a stop are reachable from the other side', () {
+      expect(move(40, 30), 30);
+      expect(move(40, 28), 29);
+    });
+  });
+
   group('currently out', () {
     test('assumes re-entry now and is provisional', () {
       final r = computeExitTime(punches: [hm(7, 50), hm(13, 0)], now: hm(13, 20));

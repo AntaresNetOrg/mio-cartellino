@@ -37,12 +37,13 @@ class SettingsStore {
   final JsonStore _store;
   static const _file = 'settings.json';
 
-  /// True until the user saves settings once (drives onboarding).
+  /// True until settings are saved once, which [HomeShell] does on the first launch.
   Future<bool> isFirstRun() async => await _store.read(_file) == null;
 
   Future<AppSettings> load() async {
     final json = await _store.read(_file);
-    return json == null ? AppSettings.defaults(DateTime.now()) : AppSettings.fromJson(json);
+    final now = DateTime.now();
+    return json == null ? AppSettings.defaults(now) : AppSettings.fromJson(json, year: now.year);
   }
 
   Future<void> save(AppSettings settings) => _store.write(_file, settings.toJson());

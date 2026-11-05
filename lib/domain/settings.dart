@@ -19,7 +19,8 @@ class AppSettings {
   static const defaultExceptionCodes = ['ERIT', 'SCN'];
   static const defaultBalanceCodes = ['CRE', 'OE-DIU', 'SCN'];
 
-  /// Year to download and process (desktop: `current_year`).
+  /// Year to download and process: always the current calendar year, so it isn't
+  /// persisted (unlike desktop `current_year`). The app has no use for past years.
   final int year;
 
   /// Riposi used (SRC) are counted strictly after this day of [year]
@@ -39,7 +40,6 @@ class AppSettings {
   DateTime get minDate => DateTime(year, minDateMonth, minDateDay);
 
   AppSettings copyWith({
-    int? year,
     int? minDateMonth,
     int? minDateDay,
     List<String>? exceptionCodes,
@@ -47,7 +47,7 @@ class AppSettings {
     List<ExcludedDate>? excludedDates,
   }) =>
       AppSettings(
-        year: year ?? this.year,
+        year: year,
         minDateMonth: minDateMonth ?? this.minDateMonth,
         minDateDay: minDateDay ?? this.minDateDay,
         exceptionCodes: exceptionCodes ?? this.exceptionCodes,
@@ -55,8 +55,9 @@ class AppSettings {
         excludedDates: excludedDates ?? this.excludedDates,
       );
 
-  factory AppSettings.fromJson(Map<String, dynamic> json) => AppSettings(
-        year: json['year'] as int,
+  /// A `year` key saved by older versions is ignored.
+  factory AppSettings.fromJson(Map<String, dynamic> json, {required int year}) => AppSettings(
+        year: year,
         minDateMonth: json['minDateMonth'] as int,
         minDateDay: json['minDateDay'] as int,
         exceptionCodes: (json['exceptionCodes'] as List<dynamic>?)?.cast<String>() ??
@@ -70,7 +71,6 @@ class AppSettings {
       );
 
   Map<String, dynamic> toJson() => {
-        'year': year,
         'minDateMonth': minDateMonth,
         'minDateDay': minDateDay,
         'exceptionCodes': exceptionCodes,

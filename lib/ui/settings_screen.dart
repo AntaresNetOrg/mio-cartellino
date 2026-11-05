@@ -5,13 +5,16 @@ import '../domain/excluded_date.dart';
 import '../domain/settings.dart';
 import '../services.dart';
 
-/// Impostazioni / onboarding: year, min date for used riposi, excluded dates.
+/// Impostazioni / onboarding: min date for used riposi, excluded dates.
 ///
 /// TODO: editing of dashboard exception/balance codes (desktop "Impostazioni").
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key, required this.services});
+  const SettingsScreen({super.key, required this.services, this.showWelcome = false});
 
   final AppServices services;
+
+  /// Shows the onboarding message until a setting is changed.
+  final bool showWelcome;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -19,7 +22,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   AppSettings? _settings;
-  bool _firstRun = false;
+  bool _edited = false;
 
   @override
   void initState() {
@@ -29,13 +32,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _load() async {
     final settings = await widget.services.settings.load();
-    final firstRun = await widget.services.settings.isFirstRun();
-    if (mounted) {
-      setState(() {
-        _settings = settings;
-        _firstRun = firstRun;
-      });
-    }
+    if (mounted) setState(() => _settings = settings);
   }
 
   Future<void> _update(AppSettings settings) async {
@@ -43,7 +40,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     setState(() {
       _settings = settings;
-      _firstRun = false;
+      _edited = true;
     });
     widget.services.notifyChanged();
   }
@@ -147,30 +144,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               children: [
-                if (_firstRun)
+                if (widget.showWelcome && !_edited)
                   const Card(
                     margin: EdgeInsets.all(16),
                     child: Padding(
                       padding: EdgeInsets.all(16),
                       child: Text(
-                        'Benvenuto! Controlla anno e data minima dei riposi, '
+                        'Benvenuto! Controlla la data minima dei riposi, '
                         'poi scarica il cartellino dalla scheda Riepilogo.',
                       ),
                     ),
                   ),
-                ListTile(
-                  title: const Text('Anno'),
-                  trailing: DropdownButton<int>(
-                    value: s.year,
-                    items: [
-                      for (final y in {DateTime.now().year - 1, DateTime.now().year, s.year})
-                        DropdownMenuItem(value: y, child: Text('$y')),
-                    ],
-                    onChanged: (y) {
-                      if (y != null) _update(s.copyWith(year: y));
-                    },
-                  ),
-                ),
                 ListTile(
                   title: const Text('Riposi fruiti contati dopo il'),
                   subtitle: Text(formatDate(s.minDate)),

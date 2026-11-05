@@ -17,13 +17,24 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   static const _settingsTab = 2;
   int _index = 0;
+  bool _firstRun = false;
 
   @override
   void initState() {
     super.initState();
-    // First run: open Impostazioni (onboarding: year + min date for riposi).
-    widget.services.settings.isFirstRun().then((first) {
-      if (first && mounted) setState(() => _index = _settingsTab);
+    _handleFirstRun();
+  }
+
+  /// First run: open Impostazioni (onboarding: min date for riposi) and save the
+  /// defaults, so later launches open on Riepilogo even if nothing was changed.
+  Future<void> _handleFirstRun() async {
+    final settings = widget.services.settings;
+    if (!await settings.isFirstRun()) return;
+    await settings.save(await settings.load());
+    if (!mounted) return;
+    setState(() {
+      _firstRun = true;
+      _index = _settingsTab;
     });
   }
 
@@ -36,7 +47,7 @@ class _HomeShellState extends State<HomeShell> {
         children: [
           DashboardScreen(services: services),
           ExitTimeScreen(services: services),
-          SettingsScreen(services: services),
+          SettingsScreen(services: services, showWelcome: _firstRun),
         ],
       ),
       bottomNavigationBar: NavigationBar(

@@ -10,7 +10,9 @@
 ///   pause is NOT absorbed by it);
 /// * the user may explicitly use part of the monthly credit (leave earlier) or
 ///   recover missing minutes (leave later); beyond 29' per day a permit is
-///   needed, which is a WARNING, never a block;
+///   needed, which is a WARNING, never a block. The sliders stop at meaningful
+///   values but can always be forced past them;
+/// * minutes after 19:50 are not counted as excess, which is also a WARNING;
 /// * if the last punch is an exit (user currently out), the result is
 ///   provisional and assumes re-entry at [now].
 library;
@@ -22,6 +24,9 @@ class WorkRules {
     this.minEntry = 7 * 60 + 50,
     this.dailyPresence = 7 * 60 + 22,
     this.tolerance = 29,
+    this.latestCountedExit = 19 * 60 + 50,
+    this.maxCreditUsed = 60,
+    this.maxDebtRecovered = 120,
   });
 
   /// Earliest time from which presence is counted (07:50).
@@ -32,6 +37,15 @@ class WorkRules {
 
   /// Max minutes of credit use / debt recovery per day without a permit.
   final int tolerance;
+
+  /// Excess minutes are not counted after this time (19:50).
+  final int latestCountedExit;
+
+  /// Leaving more than this much earlier needs a permit, so it isn't handled here.
+  final int maxCreditUsed;
+
+  /// Upper limit of the debt recovery slider.
+  final int maxDebtRecovered;
 
   static const unisa = WorkRules();
 }
@@ -45,6 +59,72 @@ enum ExitTimeWarning {
 
   /// Credit used exceeds the available monthly balance.
   creditExceedsBalance,
+
+  /// Exit after [WorkRules.latestCountedExit]: later minutes are not counted.
+  exitAfterLatestCounted,
+}
+
+enum AdjustStopKind {
+  /// All of the monthly excess, or all of the monthly shortfall.
+  balance,
+
+  /// [WorkRules.tolerance].
+  tolerance,
+
+  /// The amount of debt recovery that leads to [WorkRules.latestCountedExit].
+  latestCountedExit,
+}
+
+/// A value where the credit / debt slider stops.
+class AdjustStop {
+  const AdjustStop(this.minutes, this.kind);
+  final int minutes;
+  final AdjustStopKind kind;
+}
+
+List<AdjustStop> _normalizedStops(List<AdjustStop> stops, int max) {
+  final seen = <int>{};
+  return stops.where((s) => s.minutes > 0 && s.minutes <= max && seen.add(s.minutes)).toList()
+    ..sort((a, b) => a.minutes.compareTo(b.minutes));
+}
+
+/// Stops of the credit slider: the monthly excess [balance], if any, and the tolerance.
+List<AdjustStop> creditStops({int? balance, WorkRules rules = WorkRules.unisa}) =>
+    _normalizedStops([
+      if (balance != null) AdjustStop(balance, AdjustStopKind.balance),
+      AdjustStop(rules.tolerance, AdjustStopKind.tolerance),
+    ], rules.maxCreditUsed);
+
+/// Stops of the debt slider: the monthly shortfall (negative [balance]), the
+/// tolerance and the recovery that reaches 19:50. [baseExit] is the expected exit
+/// with no adjustment, if known.
+List<AdjustStop> debtStops({int? balance, int? baseExit, WorkRules rules = WorkRules.unisa}) =>
+    _normalizedStops([
+      if (balance != null) AdjustStop(-balance, AdjustStopKind.balance),
+      AdjustStop(rules.tolerance, AdjustStopKind.tolerance),
+      if (baseExit != null)
+        AdjustStop(rules.latestCountedExit - baseExit, AdjustStopKind.latestCountedExit),
+    ], rules.maxDebtRecovered);
+
+/// The slider value for a drag from [current] to [raw]. The value stays on the first
+/// of the ascending [stops] it reaches until [raw] is at least [release] minutes away
+/// from it, in either direction. Every value stays reachable: those just past a stop
+/// can be selected coming back from the other side.
+int valueWithStops({
+  required int current,
+  required int raw,
+  required List<int> stops,
+  int release = 4,
+}) {
+  var position = current;
+  while (true) {
+    if (stops.contains(position) && (raw - position).abs() < release) return position;
+    final ahead = raw > position
+        ? stops.where((s) => s > position && s <= raw)
+        : stops.reversed.where((s) => s < position && s >= raw);
+    if (ahead.isEmpty) return raw;
+    position = ahead.first;
+  }
 }
 
 class ExitTimeResult {
@@ -119,8 +199,7 @@ ExitTimeResult computeExitTime({
     effective.add(now > punches.last ? now : punches.last);
   }
 
-  final countedStart =
-      effective.first > rules.minEntry ? effective.first : rules.minEntry;
+  final countedStart = effective.first > rules.minEntry ? effective.first : rules.minEntry;
 
   // Each (exit, re-entry) pair; only the part after minEntry counts.
   var absence = 0;
@@ -131,6 +210,8 @@ ExitTimeResult computeExitTime({
     if (back > from) absence += back - from;
   }
 
+  final exitAt = countedStart + rules.dailyPresence + absence - creditUsed + debtRecovered;
+
   final warnings = <ExitTimeWarning>[
     if (creditUsed > rules.tolerance) ExitTimeWarning.creditOverTolerance,
     if (debtRecovered > rules.tolerance) ExitTimeWarning.debtOverTolerance,
@@ -138,10 +219,11 @@ ExitTimeResult computeExitTime({
         availableCredit != null &&
         creditUsed > (availableCredit > 0 ? availableCredit : 0))
       ExitTimeWarning.creditExceedsBalance,
+    if (exitAt > rules.latestCountedExit) ExitTimeWarning.exitAfterLatestCounted,
   ];
 
   return ExitTimeResult(
-    exitAt: countedStart + rules.dailyPresence + absence - creditUsed + debtRecovered,
+    exitAt: exitAt,
     provisional: provisional,
     countedStart: countedStart,
     absenceMinutes: absence,
