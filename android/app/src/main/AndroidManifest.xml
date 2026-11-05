@@ -2,7 +2,7 @@
     <!-- Declared here so release builds can reach presenze.unisa.it and the IdPs. -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="cartellino_unisa_mobile"
+        android:label="Mio Cartellino"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

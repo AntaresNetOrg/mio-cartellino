@@ -4,6 +4,7 @@ import '../domain/clock.dart';
 import '../domain/excluded_date.dart';
 import '../domain/settings.dart';
 import '../services.dart';
+import 'privacy_screen.dart';
 
 /// Impostazioni / onboarding: min date for used riposi, excluded dates.
 ///
@@ -151,7 +152,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       padding: EdgeInsets.all(16),
                       child: Text(
                         'Benvenuto! Controlla la data minima dei riposi, '
-                        'poi scarica il cartellino dalla scheda Riepilogo.',
+                        'poi scarica il cartellino dalla scheda Riepilogo, '
+                        'dove puoi anche provare l\'app con dati dimostrativi.',
                       ),
                     ),
                   ),
@@ -195,6 +197,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       )),
                     ),
                   ),
+                const Divider(),
+                ListTile(
+                  title: const Text('Informativa sulla privacy'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => const PrivacyScreen()),
+                  ),
+                ),
               ],
             ),
     );

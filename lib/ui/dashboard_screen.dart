@@ -3,15 +3,18 @@ import 'package:flutter/material.dart';
 import '../domain/cartellino.dart';
 import '../domain/clock.dart';
 import '../domain/dashboard.dart';
+import '../domain/demo_data.dart';
 import '../domain/riposi.dart';
 import '../domain/settings.dart';
+import '../data/stores.dart';
 import '../services.dart';
 import '../theme/unisa_theme.dart';
 import 'update_screen.dart';
 
 class _DashboardData {
-  const _DashboardData(this.settings, this.summary);
+  const _DashboardData(this.settings, this.summary, {this.isDemo = false});
   final AppSettings settings;
+  final bool isDemo;
 
   /// Null when no cartellino has been downloaded yet for settings.year.
   final DashboardSummary? summary;
@@ -59,7 +62,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
         now: DateTime.now(),
         lastUpdate: stored.fetchedAt,
       ),
+      isDemo: stored.isDemo,
     );
+  }
+
+  /// Only offered when no cartellino is stored, so it can't replace real data. A real
+  /// download overwrites the demo.
+  Future<void> _startDemo(int year) async {
+    final now = DateTime.now();
+    await widget.services.cartellino.save(
+      StoredCartellino(year: year, fetchedAt: now, rows: demoRows(now), isDemo: true),
+    );
+    widget.services.notifyChanged();
+  }
+
+  Future<void> _stopDemo(int year) async {
+    await widget.services.cartellino.delete(year);
+    widget.services.notifyChanged();
   }
 
   Future<void> _openUpdate(int year) async {
@@ -79,11 +98,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final data = snapshot.requireData;
     final summary = data.summary;
     if (summary == null) {
-      return _Empty(year: data.settings.year, onUpdate: () => _openUpdate(data.settings.year));
+      return _Empty(
+        year: data.settings.year,
+        onUpdate: () => _openUpdate(data.settings.year),
+        onDemo: () => _startDemo(data.settings.year),
+      );
     }
-    return RefreshIndicator(
+    final view = RefreshIndicator(
       onRefresh: () async => _reload(),
       child: _SummaryView(summary: summary, settings: data.settings),
+    );
+    if (!data.isDemo) return view;
+    return Column(
+      children: [
+        MaterialBanner(
+          content: const Text('Dati dimostrativi: non sono dati reali.'),
+          leading: const Icon(Icons.science_outlined),
+          actions: [
+            TextButton(
+              onPressed: () => _stopDemo(data.settings.year),
+              child: const Text('Esci dalla demo'),
+            ),
+          ],
+        ),
+        Expanded(child: view),
+      ],
     );
   }
 
@@ -95,7 +134,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final data = snapshot.data;
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Cartellino UniSA'),
+            title: const Text('Mio Cartellino'),
             actions: [
               if (data != null)
                 IconButton(
@@ -113,9 +152,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 }
 
 class _Empty extends StatelessWidget {
-  const _Empty({required this.year, required this.onUpdate});
+  const _Empty({required this.year, required this.onUpdate, required this.onDemo});
   final int year;
   final VoidCallback onUpdate;
+  final VoidCallback onDemo;
 
   @override
   Widget build(BuildContext context) => Center(
@@ -130,6 +170,11 @@ class _Empty extends StatelessWidget {
                 onPressed: onUpdate,
                 icon: const Icon(Icons.sync),
                 label: const Text('Scarica cartellino'),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: onDemo,
+                child: const Text('Prova con dati dimostrativi'),
               ),
             ],
           ),

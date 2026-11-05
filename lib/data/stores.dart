@@ -30,6 +30,11 @@ class JsonStore {
     await tmp.writeAsString(jsonEncode(data), flush: true);
     await tmp.rename(file.path);
   }
+
+  Future<void> delete(String name) async {
+    final file = _file(name);
+    if (await file.exists()) await file.delete();
+  }
 }
 
 class SettingsStore {
@@ -50,10 +55,18 @@ class SettingsStore {
 }
 
 class StoredCartellino {
-  const StoredCartellino({required this.year, required this.fetchedAt, required this.rows});
+  const StoredCartellino({
+    required this.year,
+    required this.fetchedAt,
+    required this.rows,
+    this.isDemo = false,
+  });
   final int year;
   final DateTime fetchedAt;
   final List<CartellinoRow> rows;
+
+  /// Fictitious data from the demo mode, for store reviewers.
+  final bool isDemo;
 }
 
 /// Cache of the downloaded cartellino, one file per year.
@@ -69,6 +82,7 @@ class CartellinoRepository {
     return StoredCartellino(
       year: json['year'] as int,
       fetchedAt: DateTime.parse(json['fetchedAt'] as String),
+      isDemo: json['isDemo'] as bool? ?? false,
       rows: [
         for (final r in json['rows'] as List<dynamic>)
           CartellinoRow.fromJson(r as Map<String, dynamic>),
@@ -79,8 +93,11 @@ class CartellinoRepository {
   Future<void> save(StoredCartellino c) => _store.write(_file(c.year), {
         'year': c.year,
         'fetchedAt': c.fetchedAt.toIso8601String(),
+        'isDemo': c.isDemo,
         'rows': [for (final r in c.rows) r.toJson()],
       });
+
+  Future<void> delete(int year) => _store.delete(_file(year));
 }
 
 /// Today's punches for the exit-time screen, so they survive app restarts.

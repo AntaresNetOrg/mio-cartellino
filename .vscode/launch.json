@@ -2,13 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Cartellino UniSA (debug)",
+      "name": "Mio Cartellino (debug)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart"
     },
     {
-      "name": "Cartellino UniSA (profile)",
+      "name": "Mio Cartellino (profile)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",

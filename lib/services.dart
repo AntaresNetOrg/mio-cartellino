@@ -11,6 +11,9 @@ class AppServices {
         cartellino = CartellinoRepository(store),
         punches = TodayPunchesStore(store);
 
+  @visibleForTesting
+  AppServices.forTesting(JsonStore store) : this._(store);
+
   static Future<AppServices> create() async =>
       AppServices._(JsonStore(await getApplicationDocumentsDirectory()));
 

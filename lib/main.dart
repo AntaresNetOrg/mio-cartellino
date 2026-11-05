@@ -18,7 +18,7 @@ class CartellinoApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Cartellino UniSA',
+      title: 'Mio Cartellino',
       theme: buildUnisaTheme(Brightness.light),
       darkTheme: buildUnisaTheme(Brightness.dark),
       home: HomeShell(services: services),

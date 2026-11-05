@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Flutter app (iOS + Android) companion of the desktop/TUI tool
+**Mio Cartellino** (public name; the code package keeps `cartellino_unisa_mobile`). Flutter app (iOS + Android) companion of the desktop/TUI tool
 [staffDiUnisa/CartellinoUniSA](https://github.com/staffDiUnisa/CartellinoUniSA)
 (Python, GPL-3.0). It downloads the user's attendance record ("cartellino") from
 `presenze.unisa.it`, shows a summary, and computes today's expected exit time.
@@ -17,7 +17,7 @@ As of 2026-11-05 (Flutter 3.44.8): `ios/` and `android/` are generated (bundle i
 `flutter analyze` is clean and the unit tests pass. The debug APK builds but hasn't been
 launched. On a real iPhone, SPID login and the download work, and the product owner confirmed
 the dashboard numbers match the desktop app. Android, CIE and other users are still
-untested: see the spike checklist. There are no widget tests.
+untested: see the spike checklist. Only the demo flow has widget tests.
 
 Deliberate edits to generated files, to redo if the platforms are ever regenerated:
 - Android: `minSdk = 24` (webview_flutter 4.14) in `android/app/build.gradle.kts`, and
@@ -26,6 +26,12 @@ Deliberate edits to generated files, to redo if the platforms are ever regenerat
 - iOS: `IPHONEOS_DEPLOYMENT_TARGET = 15.0` in `ios/Runner.xcodeproj/project.pbxproj` (the
   template's 13.0 is rejected by Xcode).
 - `flutter create` adds a `test/widget_test.dart` referencing a nonexistent `MyApp`: delete it.
+- iOS is iPhone-only (`TARGETED_DEVICE_FAMILY = 1`) and declares `ITSAppUsesNonExemptEncryption = false`.
+- Android signs releases with `android/key.properties` when present, otherwise with debug keys.
+
+Store release: procedure in `docs/PUBBLICAZIONE.md`, texts and graphics in `store/`, icons from
+`tool/generate_store_assets.py`. A debug build can't start from the iPhone home screen (it crashes in
+`VSyncClient`): use `flutter run --release` to test a reopen. Screenshots must show only fictitious data.
 
 ## Commands
 
@@ -107,6 +113,8 @@ Design choices:
   `services.revision`.
 - Domain uses `int` minutes everywhere, not `Duration`/`DateTime`.
 - No backend, no credentials stored, nothing leaves the device.
+- Demo mode for store reviewers (`domain/demo_data.dart`): fictitious rows stored with `isDemo`, offered
+  only when no cartellino is stored, so it can never replace real data.
 
 ## Authentication (decided)
 
