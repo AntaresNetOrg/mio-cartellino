@@ -20,4 +20,4 @@ Per pubblicare l'app segui [docs/PUBBLICAZIONE.md](docs/PUBBLICAZIONE.md). Infor
 
 ## Licenza
 
-GPL-3.0, come il progetto desktop.
+[MIT](LICENSE).

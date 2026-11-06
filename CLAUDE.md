@@ -7,7 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 (Python, GPL-3.0). It downloads the user's attendance record ("cartellino") from
 `presenze.unisa.it`, shows a summary, and computes today's expected exit time.
 
-Author: Andrea Bruno. Conventions: code, comments and this file in **English**; UI strings
+Author: Andrea Bruno, also the only author in the desktop repo's git history. This app is MIT;
+the desktop tool stays GPL-3.0. Conventions: code, comments and this file in **English**; UI strings
 in **Italian** (users are UniSA staff).
 
 ## Status

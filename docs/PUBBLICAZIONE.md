@@ -1,6 +1,6 @@
 # Pubblicare Mio Cartellino sugli store
 
-L'app è pronta per i test: su iOS puoi distribuirla subito con TestFlight ai tester interni. Per Android serve prima un dispositivo fisico, e per la pubblicazione aperta restano i tre punti qui sotto.
+L'app è pronta per i test: su iOS puoi distribuirla subito con TestFlight ai tester interni. Per Android serve prima un dispositivo fisico, e per la pubblicazione aperta restano i due punti qui sotto.
 
 Requisiti verificati sulle pagine ufficiali il 5 novembre 2026: controllali di nuovo se passa molto tempo.
 
@@ -24,7 +24,6 @@ Nessuno blocca i tester interni di TestFlight. Tutti riguardano la pubblicazione
 
 1. **Riferimenti all'Ateneo.** L'icona non usa il sigillo né altri elementi dell'Università. La scheda però cita l'Università di Salerno per spiegare a chi serve l'app, quindi l'avviso "non è un servizio ufficiale" deve restare. Prima di pubblicare, chiedi comunque conferma all'Ateneo.
 2. **Accettazione della modalità demo.** Con SPID e CIE non si può fornire un account condiviso, quindi l'app include una demo con dati fittizi. Apple accetta una demo al posto dell'account solo per obblighi legali o di sicurezza e con la sua [approvazione preventiva](https://developer.apple.com/app-store/review/guidelines/): chiedila prima di inviare, spiegando il motivo. Google chiede [credenziali funzionanti](https://support.google.com/googleplay/android-developer/answer/14151465), quindi la demo potrebbe non bastare: se la rifiuta, serve un'utenza di prova fornita dall'Ateneo. Allega anche un breve video del login e del download reali, perché nella demo i revisori non vedono questa parte.
-3. **Licenza GPL-3.0.** La compatibilità tra GPL e condizioni dell'App Store è un punto controverso. Se tutto il codice è tuo puoi decidere liberamente, ma se il codice portato dal progetto desktop ha altri autori serve il loro accordo. Non è un parere legale: per una pubblicazione aperta conviene sentire l'Ateneo.
 
 ## 1. Test su iOS con TestFlight
 
