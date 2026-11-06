@@ -38,8 +38,8 @@ Per usare il download serve un'utenza del personale dell'Università di Salerno 
 | Sottotitolo | Presenze e uscita prevista |
 | Testo promozionale | Saldo del mese, riposi compensativi, ferie e orario di uscita previsto: il tuo cartellino sul telefono. I dati restano sul dispositivo. |
 | Parole chiave | cartellino,presenze,timbrature,orario,uscita,saldo,ore,riposi,ferie,permessi |
-| URL assistenza | https://github.com/bruand81/mio-cartellino/issues |
-| URL privacy | https://github.com/bruand81/mio-cartellino/blob/main/PRIVACY.md |
+| URL assistenza | https://github.com/AntaresNetOrg/mio-cartellino/issues |
+| URL privacy | https://github.com/AntaresNetOrg/mio-cartellino/blob/main/PRIVACY.md |
 | Categoria | Produttività; secondaria: Economia |
 | Copyright | 2026 Andrea Bruno |
 | Novità (dalla seconda versione) | Da scrivere a ogni aggiornamento |
@@ -70,9 +70,9 @@ The app has no backend. All data stays on the device.
 |---|---|
 | Lingua predefinita | Italiano (it-IT) |
 | Descrizione breve | Saldo ore, riposi, ferie e orario di uscita: il tuo cartellino sul telefono. |
-| Sito web | https://github.com/bruand81/mio-cartellino |
+| Sito web | https://github.com/AntaresNetOrg/mio-cartellino |
 | Email di contatto | info@antaresnet.org |
-| Norme sulla privacy | https://github.com/bruand81/mio-cartellino/blob/main/PRIVACY.md |
+| Norme sulla privacy | https://github.com/AntaresNetOrg/mio-cartellino/blob/main/PRIVACY.md |
 | Categoria | Produttività |
 | Tipo | App, gratuita |
 
