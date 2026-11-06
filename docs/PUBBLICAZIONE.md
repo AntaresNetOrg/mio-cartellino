@@ -96,7 +96,7 @@ Il file è `build/app/outputs/bundle/release/app-release.aab`. In Play Console c
 ## 3. Pubblicazione su App Store
 
 1. **Risolvi i punti** indicati sopra, in particolare l'approvazione della demo.
-2. **Pubblica l'informativa.** Il repository GitHub deve essere pubblico, altrimenti l'URL della privacy non funziona. Se il nome o l'account sono diversi da `bruand81/mio-cartellino`, aggiorna gli URL in `store/SCHEDE.md`.
+2. **Pubblica l'informativa.** Il repository GitHub deve essere pubblico, altrimenti l'URL della privacy non funziona. Se il nome o l'account sono diversi da `AntaresNetOrg/mio-cartellino`, aggiorna gli URL in `store/SCHEDE.md`.
 3. **Compila la scheda** con i testi di `store/SCHEDE.md`.
 4. **Carica gli screenshot** da `store/screenshots/app-store/` (1320×2868). Se App Store Connect chiede anche la taglia media, usa `store/screenshots/app-store-6.3/` (1206×2622).
 5. **Compila la privacy dell'app:** "non raccogliamo dati". Per Apple i dati [trattati solo sul dispositivo](https://developer.apple.com/app-store/app-privacy-details/) non sono "raccolti".
